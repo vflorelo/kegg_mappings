@@ -1,0 +1,3 @@
+org include	cre,ath,ota
+org exclude	hsa,mmu
+annotation file	example.tsv
