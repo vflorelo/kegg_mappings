@@ -89,7 +89,7 @@ if [ -z "$include_org_list" ]                                                   
 then                                                                                                                         #
 	include_org_list=$(zcat ${kegg_data_dir}/org_list.gz | cut -f2 | sort -V | uniq | grep -wvFf <(echo "$exclude_org_list") ) #
 else                                                                                                                         #
-	include_org_list=$(echo "$include_org_list" | grep -wvFf "$exclude_org_list")                                              #
+	include_org_list=$(echo "$include_org_list" | grep -wvFf <(echo "$exclude_org_list"))                                      #
 fi                                                                                                                           #
 ##############################################################################################################################
 
@@ -98,7 +98,7 @@ cd ${work_dir}                                                                  
 for annotation_file in $annotation_file_list                                                                                                                                        #
 do                                                                                                                                                                                  #
 	kegg_term_list=$(cut -f2 ${annotation_file} | perl -pe 's/\,/\n/g' | grep -v ^$ | cut -f2 -d\: | sort -V | uniq)                                                                  #
-  ortholog_list=$(zgrep -wFf <(echo "$kegg_term_list") ${kegg_data_dir}/ortholog_gene_mappings.gz | grep -wFf <(echo "$include_org_list") | grep -wvFf <(echo "$exclude_org_list") | cut -f2 | cut -d: -f2 | sort -V | uniq)#
+  ortholog_list=$(zgrep -wFf <(echo "$kegg_term_list") ${kegg_data_dir}/ortholog_gene_mappings.gz | grep -wFf <(echo "$include_org_list") | grep -wvFf <(echo "$exclude_org_list") | cut -f2 | cut -d: -f2 | sort -V | uniq) #
   pathway_list=$(zgrep -wFf <(echo "$ortholog_list") ${kegg_data_dir}/gene_pathway_mappings.gz | cut -f2 | cut -d\: -f2 | sort -V | uniq )                                          #
 	zgrep -wFf <(echo "$pathway_list")   ${kegg_data_dir}/pathway_list.gz | perl -pe 's/path\://;s/\t/\{/;s/$/\}/' > ${kegg_tmp_dir}/pathway_names                                    #
 	zgrep -wFf <(echo "$kegg_term_list") ${kegg_data_dir}/ortholog_gene_mappings.gz | grep -wFf <(echo "$include_org_list") > ${kegg_tmp_dir}/ortholog_gene_mappings.tsv              #
