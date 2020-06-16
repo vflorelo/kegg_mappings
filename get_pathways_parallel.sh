@@ -70,19 +70,19 @@ then                                                    #
 fi                                                      #
 #########################################################
 
-##################################################################################################
-cd ${kegg_data_dir}                                                                              #
-for file in $file_list                                                                           #
-do                                                                                               #
-	if [ -f "${file}.gz" ]                                                                         #
-	then                                                                                           #
-		echo "$file file present"                                                                    #
-	else                                                                                           #
-		echo "$file file missing, fetching, caution this might take a while"                         #
-		wget "https://raw.githubusercontent.com/vflorelo/kegg_mappings/master/$file.gz"              #
-	fi                                                                                             #
-done                                                                                             #
-##################################################################################################
+#######################################
+cd ${kegg_data_dir}                   #
+for file in $file_list                #
+do                                    #
+	if [ -f "${file}.gz" ]              #
+	then                                #
+		echo "$file file present"         #
+	else                                #
+		echo "$file file missing exiting" #
+		exit 1                            #
+	fi                                  #
+done                                  #
+#######################################
 
 ##############################################################################################################################
 if [ -z "$include_org_list" ]                                                                                                #
@@ -100,11 +100,7 @@ do                                                                              
 	kegg_term_list=$(cut -f2 ${annotation_file} | perl -pe 's/\,/\n/g' | grep -v ^$ | cut -f2 -d\: | sort -V | uniq)                                                                  #
   ortholog_list=$(zgrep -wFf <(echo "$kegg_term_list") ${kegg_data_dir}/ortholog_gene_mappings.gz | grep -wFf <(echo "$include_org_list") | cut -f2 | cut -d: -f2 | sort -V | uniq) #
   pathway_list=$(zgrep -wFf <(echo "$ortholog_list") ${kegg_data_dir}/gene_pathway_mappings.gz | cut -f2 | cut -d\: -f2 | sort -V | uniq )                                          #
-	for pathway in $pathway_list                                                                                                                                                      #
-	do                                                                                                                                                                                #
-		pathway_name=$(curl -s "http://rest.kegg.jp/get/$pathway" | grep -w ^NAME | perl -pe 's/NAME\ \ \ \ \ \ \ \ //g')                                                               #
-		echo -e "$pathway{$pathway_name}"                                                                                                                                               #
-	done > ${kegg_tmp_dir}/pathway_names                                                                                                                                              #
+	zgrep -wFf <(echo "$pathway_list")   ${kegg_data_dir}/pathway_list.gz | perl -pe 's/path\://;s/\t/\{/;s/$/\}/' > ${kegg_tmp_dir}/pathway_names                                               #
 	zgrep -wFf <(echo "$kegg_term_list") ${kegg_data_dir}/ortholog_gene_mappings.gz | grep -wFf <(echo "$include_org_list") > ${kegg_tmp_dir}/ortholog_gene_mappings.tsv              #
 	zgrep -wFf <(echo "$ortholog_list")  ${kegg_data_dir}/gene_pathway_mappings.gz > ${kegg_tmp_dir}/gene_pathway_mappings.tsv                                                        #
 	awk 'BEGIN{FS="\t"}{print "get_pathways.sh "$1,$2}' $annotation_file | parallel -j12                                                                                              #
